@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>ModPong</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/2.6.2/phaser.min.js"></script>
+</head>
+
+<body>
+    <script type="text/javascript">
+        /* global Phaser */
+        window.onload = function() {
+            var game = new Phaser.Game(800, 600, Phaser.AUTO, '', {
+                preload: preload,
+                create: create
+            });
+
+            function preload() {
+                game.load.image('logo', 'phaser.png');
+            }
+
+            function create() {
+                var logo = game.add.sprite(game.world.centerX, game.world.centerY, 'logo');
+                logo.anchor.setTo(0.5, 0.5);
+            }
+        };
+    </script>
+</body>
+
+</html>
