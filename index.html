@@ -1,31 +1,71 @@
 <!doctype html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="UTF-8">
     <title>ModPong</title>
+    <script src="node_modules/nw-dev/lib/dev.js"></script>
+    <script src="node_modules/lodash/lodash.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/2.6.2/phaser.min.js"></script>
-</head>
+  </head>
 
-<body>
+  <body style="margin: 0; background: #111">
     <script type="text/javascript">
-        /* global Phaser */
-        window.onload = function() {
-            var game = new Phaser.Game(800, 600, Phaser.AUTO, '', {
-                preload: preload,
-                create: create
-            });
+      /* global Phaser */
+      window.onload = function() {
+        var game = new Phaser.Game(800, 600, Phaser.CANVAS, '', { preload, create, update })
 
-            function preload() {
-                game.load.image('logo', 'phaser.png');
-            }
+        function renderTexture(graphicsCommands) {
+          var graphics = new Phaser.Graphics(game)
+          graphics.beginFill(0xffffff)
+          graphicsCommands(graphics)
+          graphics.endFill()
+          return graphics.generateTexture()
+        }
 
-            function create() {
-                var logo = game.add.sprite(game.world.centerX, game.world.centerY, 'logo');
-                logo.anchor.setTo(0.5, 0.5);
-            }
-        };
+        var renderLib = {
+          ball: function(graphics) {
+            graphics.drawRect(0, 0, 12, 12)
+          },
+          paddle: function(graphics) {
+            graphics.drawRect(0, 0, 12, 72)
+          }
+        }
+
+        var textureLib
+        var ball, paddle
+        function preload() {
+          textureLib = _.mapValues(renderLib, renderTexture)
+        }
+
+        function create() {
+          game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL
+          game.scale.pageAlignVertically = true
+          game.scale.pageAlignHorizontally = true
+
+          game.physics.startSystem(Phaser.Physics.ARCADE)
+
+          ball = game.add.sprite(game.world.centerX, game.world.centerY, textureLib.ball)
+          ball.anchor.set(0.5, 0.5)
+          game.physics.enable(ball, Phaser.Physics.ARCADE)
+          ball.checkWorldBounds = true
+          ball.body.collideWorldBounds = true
+          ball.body.bounce.set(1)
+
+          paddle = game.add.sprite(game.world.centerX, game.world.centerY, textureLib.paddle)
+          paddle.anchor.set(0.5, 0.5)
+          game.physics.enable(paddle, Phaser.Physics.ARCADE)
+          paddle.checkWorldBounds = true
+          paddle.body.collideWorldBounds = true
+          paddle.body.immovable = true
+
+          game.physics.arcade.velocityFromAngle(60, 500, ball.body.velocity)
+        }
+
+        function update() {
+          game.physics.arcade.collide(ball, paddle)
+        }
+      }
     </script>
-</body>
-
+  </body>
 </html>
+
