@@ -6,102 +6,15 @@
     <script src="node_modules/nw-dev/lib/dev.js"></script>
     <script src="node_modules/lodash/lodash.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/2.6.2/phaser.min.js"></script>
+    <script src="src/main.js"></script>
+    <link rel="stylesheet" href="src/style.css" media="all">
   </head>
 
-  <body style="margin: 0; background: #111; color: #eee">
-    <pre id="debug" style="position: absolute"></pre>
+  <body>
+    <pre id="debug"></pre>
     <script type="text/javascript">
-      /* global Phaser _ */
-      window.onload = function() {
-        var game = new Phaser.Game(800, 600, Phaser.CANVAS, '', { preload, create, update })
-        var textureLib
-        var ball
-        var paddles = {}
-
-        function preload() {
-          var renderLib = {
-            ball: function(graphics) {
-              graphics.drawRect(0, 0, 12, 12)
-            },
-            paddle: function(graphics) {
-              graphics.drawRect(0, 0, 12, 72)
-            }
-          }
-  
-          function renderTexture(graphicsCommands) {
-            var graphics = new Phaser.Graphics(game)
-            graphics.beginFill(0xffffff)
-            graphicsCommands(graphics)
-            graphics.endFill()
-            return graphics.generateTexture()
-          }
-
-          textureLib = _.mapValues(renderLib, renderTexture)
-        }
-        
-        function create() {
-          function applyPhysicsDefaults(sprite) {
-            sprite.anchor.set(0.5, 0.5)
-            game.physics.enable(sprite, Phaser.Physics.ARCADE)
-            sprite.checkWorldBounds = true
-            sprite.body.collideWorldBounds = true
-          }
-          
-          function createPaddle(xPos, tint) {
-            var paddle = game.add.sprite(xPos, game.world.centerY, textureLib.paddle)
-            applyPhysicsDefaults(paddle)
-            paddle.body.immovable = true
-            paddle.ballTint = tint
-            return paddle
-          }
-
-          game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL
-          game.scale.pageAlignVertically = true
-          game.scale.pageAlignHorizontally = true
-
-          game.physics.startSystem(Phaser.Physics.ARCADE)
-
-          ball = game.add.sprite(game.world.centerX, game.world.centerY, textureLib.ball)
-          applyPhysicsDefaults(ball)
-          ball.body.bounce.set(1)
-
-          paddles.left  = createPaddle(25,                    0xff2222)
-          paddles.right = createPaddle(game.world.width - 25, 0x22ffff)
-
-          game.physics.arcade.velocityFromAngle(30, 600, ball.body.velocity)
-          ball.body.maxVelocity = 600
-        }
-
-        function update() {
-          var inputKeys = _.mapValues({
-            left: { up: Phaser.KeyCode.W, down: Phaser.KeyCode.S },
-            right: { up: Phaser.KeyCode.UP, down: Phaser.KeyCode.DOWN }
-          }, keymap => game.input.keyboard.addKeys(keymap))
-          
-          //ball.body.velocity = game.physics.arcade.velocityFrom
-          ball.body.velocity.rotate(0, 0, 0.02)
-          
-          paddles.left.body.velocity = new Phaser.Point()
-          paddles.right.body.velocity = new Phaser.Point()
-          if (inputKeys.left.up.isDown) {
-            paddles.left.body.velocity.y -= 500
-          }
-          if (inputKeys.left.down.isDown) {
-            paddles.left.body.velocity.y += 500
-          }
-          if (inputKeys.right.up.isDown) {
-            paddles.right.body.velocity.y -= 500
-          }
-          if (inputKeys.right.down.isDown) {
-            paddles.right.body.velocity.y += 500
-          }
-          game.physics.arcade.collide(ball, _.values(paddles), function (ball, paddle) {
-              console.log(`ball ${ball.position} collided with paddle ${paddle.position} (tint ${paddle.ballTint.toString(16)})`)
-              ball.tint = paddle.ballTint
-          })
-          document.getElementById('debug').innerText = JSON.stringify(ball.position, null, 2)
-        }
-      }
+      /* global main */
+      window.onload = function() { main() }
     </script>
   </body>
 </html>
