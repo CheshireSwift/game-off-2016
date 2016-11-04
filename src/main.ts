@@ -1,11 +1,37 @@
 'use strict'
+declare var Phaser
+declare var _
 
-window.main = function() {
-  /* global Phaser _ */
-  var game = new Phaser.Game(800, 600, Phaser.CANVAS, '', { preload, create, update })
-  var textureLib
-  var ball
-  var players = {
+interface Players {
+    left: Player;
+    right: Player;
+    each: any;
+    populate: any;
+    map: any;
+    both?: [Player];
+}
+
+interface Player {
+    data: () => PlayerData;
+}
+
+interface PlayerData {
+    xPos: number;
+    tint: number;
+    keys: KeyMap;
+}
+
+interface KeyMap {
+    up: number;
+    down: number;
+}
+
+window['main'] = function() {
+  var debugElem = document.getElementById('debug');
+  var game = new Phaser.Game(800, 600, Phaser.CANVAS, '', { preload, create, update });
+  var textureLib;
+  var ball;
+  var players: Players = {
     left: {
       data: () => ({
         xPos: 25,
@@ -21,17 +47,14 @@ window.main = function() {
       })
     },
     each: function(f) {
-      console.log(this.both)
-      _.forEach(this.both, f)
+      _.forEach(this.both, f);
     },
     populate: function(field, computation) {
       this.each(player => {
-        _.set(player, field, computation(player.data()))
+        _.set(player, field, computation(player.data()));
       })
     },
-    map: function(f) {
-      return _.map(this.both, f)
-    }
+    map: function (f) { return _.map(this.both, f) }
   }
   players.both = [players.left, players.right]
 
@@ -45,7 +68,7 @@ window.main = function() {
       }
     }
 
-    function renderTexture(graphicsCommands) {
+    function renderTexture(graphicsCommands: (graphics: any) => void): any {
       var graphics = new Phaser.Graphics(game)
       graphics.beginFill(0xffffff)
       graphicsCommands(graphics)
@@ -111,6 +134,6 @@ window.main = function() {
     })
 
     debugDisplay(JSON.stringify(ball.position, null, 2))
-    document.getElementById('debug').innerText = debugText
+    debugElem.innerText = debugText
   }
 }

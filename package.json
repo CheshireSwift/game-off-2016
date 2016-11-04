@@ -2,10 +2,10 @@
   "name": "modpong",
   "version": "1.0.0",
   "description": "",
-  "main": "index.html",
+  "main": "dist/index.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "broccoli build dist",
+    "build": "rm -rf dist && broccoli build dist",
     "start": "broccoli serve"
   },
   "repository": {
