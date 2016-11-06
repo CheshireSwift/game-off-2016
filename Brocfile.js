@@ -3,7 +3,8 @@ var typescript = require('broccoli-typescript-compiler').typescript
 var mergeTrees = require('broccoli-merge-trees')
 var watchify = require('broccoli-watchify')
 
-const sourceDir = 'src'
+var sourceDir = new Funnel('src', { exclude: ['**/*.un~', '**/*.swp'] })
+
 var html = new Funnel(sourceDir, { include: ['**/*.html'] })
 var css = new Funnel(sourceDir, { include: ['**/*.css'] })
 
