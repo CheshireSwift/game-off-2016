@@ -44,6 +44,7 @@ window['main'] = function() {
   var game = new Phaser.Game(800, 600, Phaser.CANVAS, '', { preload, create, update });
   var textureLib: TextureLibrary;
   var ball: Phaser.Sprite;
+  var emitter: Phaser.Particles.Arcade.Emitter;
   var players: Players = {
     left: {
       data: () => ({
@@ -78,6 +79,9 @@ window['main'] = function() {
       },
       paddle: function(graphics) {
         graphics.drawRect(0, 0, 12, 72)
+      },
+      particle: function(graphics) {
+        graphics.drawRect(0, 0, 12, 12)
       }
     }
 
@@ -125,6 +129,12 @@ window['main'] = function() {
 
     game.physics.arcade.velocityFromAngle(30, 600, ball.body.velocity)
     ball.body.maxVelocity = 600
+
+    emitter = game.add.emitter(game.world.centerX, game.world.centerY, 100)
+    emitter.makeParticles(textureLib['particle'])
+    emitter.setAlpha(1, 0, 400)
+    emitter.gravity = 0
+    emitter.start(false, 400, 10)
   }
 
   function update() {
@@ -132,6 +142,12 @@ window['main'] = function() {
     function debugDisplay(s: string) {
       debugText += s + '\n'
     }
+
+    var halfBall = ball.body.velocity.clone().multiply(0.3, 0.3)
+    emitter.maxParticleSpeed = Phaser.Point.add(halfBall, new Phaser.Point(25, 25))
+    emitter.minParticleSpeed = Phaser.Point.add(halfBall, new Phaser.Point(-25, -25))
+    emitter.emitX = ball.x
+    emitter.emitY = ball.y
 
     players.each(player => {
       player.paddle.body.velocity = new Phaser.Point()
@@ -146,6 +162,7 @@ window['main'] = function() {
     game.physics.arcade.collide(ball, players.map('paddle'), function (ball: Phaser.Sprite, paddle: Paddle) {
       console.log(`ball ${ball.position} collided with paddle ${paddle.position} (tint ${paddle.ballTint.toString(16)})`)
       ball.tint = paddle.ballTint
+      emitter.setAll('tint', paddle.ballTint)
     })
 
     debugDisplay(JSON.stringify(ball.position, null, 2))
