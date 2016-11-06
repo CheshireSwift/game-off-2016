@@ -7,7 +7,14 @@ var html = new Funnel(sourceDir, { include: ['**/*.html'] })
 var css = new Funnel(sourceDir, { include: ['**/*.css'] })
 
 var rawJs = new Funnel(sourceDir, { include: ['**/*.js'] })
-var ts = typescript(sourceDir)
+var ts = typescript(mergeTrees([sourceDir, 'typings']), {
+    tsconfig: {
+        compilerOptions: {
+            module: "commonjs",
+            sourceMap: true
+        }
+    }
+})
 var js = mergeTrees([rawJs, ts])
 
 var libs = new Funnel('node_modules', { include: ['lodash/lodash.min.js'] })

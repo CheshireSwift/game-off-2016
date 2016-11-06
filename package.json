@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rm -rf dist && broccoli build dist",
-    "start": "broccoli serve"
+    "start": "broccoli serve",
+    "start:cloud": "broccoli serve --port $PORT --host $IP"
   },
   "repository": {
     "type": "git",
@@ -26,8 +27,10 @@
     "broccoli": "^0.16.9",
     "broccoli-cli": "^1.0.0",
     "broccoli-funnel": "^1.0.8",
+    "broccoli-merge-trees": "^1.1.4",
     "broccoli-typescript-compiler": "^1.0.1",
     "nw-dev": "^3.0.0",
-    "typescript": "^2.0.7"
+    "typescript": "^2.0.7",
+    "typings": "^1.5.0"
   }
 }
