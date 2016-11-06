@@ -29,6 +29,7 @@
     "broccoli-funnel": "^1.0.8",
     "broccoli-merge-trees": "^1.1.4",
     "broccoli-typescript-compiler": "^1.0.1",
+    "broccoli-watchify": "^1.0.0",
     "nw-dev": "^3.0.0",
     "typescript": "^2.0.7",
     "typings": "^1.5.0"

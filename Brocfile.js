@@ -1,6 +1,7 @@
 var Funnel = require('broccoli-funnel')
 var typescript = require('broccoli-typescript-compiler').typescript
 var mergeTrees = require('broccoli-merge-trees')
+var watchify = require('broccoli-watchify')
 
 const sourceDir = 'src'
 var html = new Funnel(sourceDir, { include: ['**/*.html'] })
@@ -15,9 +16,15 @@ var ts = typescript(mergeTrees([sourceDir, 'typings']), {
         }
     }
 })
-var js = mergeTrees([rawJs, ts])
 
-var libs = new Funnel('node_modules', { include: ['lodash/lodash.min.js'] })
+var js = watchify(mergeTrees([rawJs, ts]), {
+  browserify: {
+    entries: ['./main.js'],
+    debug: true
+  },
+  outputFile: 'app.js',
+  cache: true
+})
 
-module.exports = mergeTrees([html, js, css, libs])
+module.exports = mergeTrees([html, js, css])
 
