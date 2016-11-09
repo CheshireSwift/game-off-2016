@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/CheshireSwift/ModPong#readme",
   "dependencies": {
+    "color": "^0.11.4",
     "lodash": "^4.16.6",
     "phaser": "^2.6.2"
   },

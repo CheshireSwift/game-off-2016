@@ -1,5 +1,7 @@
 'use strict'
 import * as _ from 'lodash'
+import colourHash from './colourHash'
+import { ScriptConfig } from './Script'
 
 interface Players {
     left: Player;
@@ -18,7 +20,7 @@ interface Player {
 
 interface PlayerData {
     xPos: number;
-    tint: number;
+    scriptConfig: ScriptConfig;
     keys: PlayerKeyMap<number>;
 }
 
@@ -50,7 +52,12 @@ window['main'] = function() {
             data: () => ({
                 xPos: 25,
                 scriptConfig: {
-                    tint: 0xff2222
+                    property1: Math.random() * 256,
+                    property2: Math.random() * 256,
+                    property3: Math.random() * 256,
+                    property4: Math.random() * 256,
+                    property5: Math.random() * 256,
+                    property6: Math.random() * 256
                 },
                 keys: { up: Phaser.KeyCode.W, down: Phaser.KeyCode.S }
             })
@@ -59,7 +66,12 @@ window['main'] = function() {
             data: () => ({
                 xPos: game.world.width - 25,
                 scriptConfig: {
-                    tint: 0x22ffff
+                    property1: Math.random() * 256,
+                    property2: Math.random() * 256,
+                    property3: Math.random() * 256,
+                    property4: Math.random() * 256,
+                    property5: Math.random() * 256,
+                    property6: Math.random() * 256
                 },
                 keys: { up: Phaser.KeyCode.UP, down: Phaser.KeyCode.DOWN }
             })
@@ -111,7 +123,7 @@ window['main'] = function() {
         function createPaddle(data: PlayerData) {
             var paddle: Paddle = _.assign<Phaser.Sprite, Paddle>(
                 game.add.sprite(data.xPos, game.world.centerY, textureLib['paddle']),
-                { ballTint: data.tint }
+                { ballTint: colourHash(data.scriptConfig) }
             );
             applyPhysicsDefaults(paddle);
             paddle.body.immovable = true;
@@ -165,7 +177,7 @@ window['main'] = function() {
 
         game.physics.arcade.collide(ball, players.map('paddle'), function (ball: Phaser.Sprite, paddle: Paddle) {
             console.log(`ball ${ball.position} collided with paddle ${paddle.position} (tint ${paddle.ballTint.toString(16)})`);
-            var tint = _.get<number>(paddle, 'scriptConfig.tint');
+            var tint = paddle.ballTint;
             ball.tint = tint;
             emitter.setAll('tint', tint);
         })
