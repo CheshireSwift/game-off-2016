@@ -12,6 +12,7 @@ interface PlayerData {
   xPos: number;
   scriptConfig: ScriptConfig;
   keys: PlayerKeyMap<number>;
+  tint: number;
 }
 
 interface Paddle extends Phaser.Sprite {
@@ -34,7 +35,8 @@ interface Players {
 
 var textureLib: TextureLibrary
 var ball: Phaser.Sprite
-var emitter: Phaser.Particles.Arcade.Emitter
+var trailEmitter: Phaser.Particles.Arcade.Emitter
+var haloEmitter: Phaser.Particles.Arcade.Emitter
 var players: Players
 
 export function preloader() {
@@ -53,7 +55,7 @@ export function preloader() {
 
     textureLib = _.mapValues(renderLib, renderTexture)
 
-      /* Functions */
+    /* Functions */
 
     function renderTexture(graphicsCommands: (graphics: Phaser.Graphics) => void): PIXI.Texture {
       var graphics = new Phaser.Graphics(game)
@@ -85,13 +87,23 @@ export function creator() {
     game.physics.arcade.velocityFromAngle(30, 600, ball.body.velocity)
     ball.body.maxVelocity = 600
 
-    emitter = game.add.emitter(game.world.centerX, game.world.centerY, 100)
-    emitter.makeParticles(textureLib['particle'])
-    emitter.setAlpha(1, 0, 400)
-    emitter.gravity = 0
-    emitter.start(false, 400, 10)
+    trailEmitter = game.add.emitter(game.world.centerX, game.world.centerY, 100)
+    trailEmitter.makeParticles(textureLib['particle'])
+    trailEmitter.setAlpha(1, 0, 400)
+    trailEmitter.gravity = 0
+    trailEmitter.start(false, 400, 10)
 
-      /* Functions */
+    haloEmitter = game.add.emitter(0, 0, 100)
+    haloEmitter.makeParticles(textureLib['particle'])
+    haloEmitter.setAlpha(1, 0, 400)
+    haloEmitter.gravity = 0
+    haloEmitter.start(false, 400, 10)
+    ball.addChild(haloEmitter)
+    var ballSurface = game.make.sprite(0, 0, textureLib['ball'])
+    ballSurface.anchor.set(0.5, 0.5)
+    ball.addChild(ballSurface)
+
+    /* Functions */
 
     function applyPhysicsDefaults(sprite: Phaser.Sprite) {
       sprite.anchor.set(0.5, 0.5)
@@ -103,10 +115,14 @@ export function creator() {
     function createPaddle(data: PlayerData) {
       var paddle: Paddle = _.assign<Phaser.Sprite, Paddle>(
         game.add.sprite(data.xPos, game.world.centerY, textureLib['paddle']),
-        { ballTint: colourHash(data.scriptConfig) }
+        {
+            tint: data.tint,
+            ballTint: colourHash(data.scriptConfig)
+        }
       )
       applyPhysicsDefaults(paddle)
       paddle.body.immovable = true
+
       return paddle
     }
 
@@ -123,7 +139,8 @@ export function creator() {
               property5: Math.random() * 256,
               property6: Math.random() * 256
             },
-            keys: { up: Phaser.KeyCode.W, down: Phaser.KeyCode.S }
+            keys: { up: Phaser.KeyCode.W, down: Phaser.KeyCode.S },
+            tint: 0xff1111
           }
         },
         right: {
@@ -137,7 +154,8 @@ export function creator() {
               property5: Math.random() * 256,
               property6: Math.random() * 256
             },
-            keys: { up: Phaser.KeyCode.UP, down: Phaser.KeyCode.DOWN }
+            keys: { up: Phaser.KeyCode.UP, down: Phaser.KeyCode.DOWN },
+            tint: 0x11ffff
           }
         },
         each: function(f) {
@@ -160,10 +178,10 @@ export function updater(debugElem?: HTMLElement) {
   return function(game) {
     var debugText = ''
     var halfBall = ball.body.velocity.clone().multiply(0.3, 0.3)
-    emitter.maxParticleSpeed = Phaser.Point.add(halfBall, new Phaser.Point(25, 25))
-    emitter.minParticleSpeed = Phaser.Point.add(halfBall, new Phaser.Point(-25, -25))
-    emitter.emitX = ball.x
-    emitter.emitY = ball.y
+    trailEmitter.maxParticleSpeed = Phaser.Point.add(halfBall, new Phaser.Point(25, 25))
+    trailEmitter.minParticleSpeed = Phaser.Point.add(halfBall, new Phaser.Point(-25, -25))
+    trailEmitter.emitX = ball.x
+    trailEmitter.emitY = ball.y
 
     players.each(player => {
       player.paddle.body.velocity = new Phaser.Point()
@@ -177,7 +195,8 @@ export function updater(debugElem?: HTMLElement) {
 
     game.physics.arcade.collide(ball, players.map('paddle'), function (ball: Phaser.Sprite, paddle: Paddle) {
       ball.tint = paddle.ballTint
-      emitter.setAll('tint', paddle.ballTint)
+      trailEmitter.setAll('tint', paddle.ballTint)
+      haloEmitter.setAll('tint', paddle.tint)
     })
 
     debugDisplay(JSON.stringify(ball.position, null, 2))
@@ -186,7 +205,7 @@ export function updater(debugElem?: HTMLElement) {
       debugElem.innerText = debugText
     }
 
-      /* Functions */
+    /* Functions */
 
     function debugDisplay(s: string) {
       debugText += s + '\n'
