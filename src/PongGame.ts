@@ -6,6 +6,7 @@ interface Player {
   data: PlayerData;
   paddle?: Paddle;
   keys?: PlayerKeyMap<Phaser.Key>;
+  score?: Phaser.Text
 }
 
 type RenderFunc = (graphics: Phaser.Graphics) => void
@@ -59,7 +60,7 @@ export function preloader() {
   }
 }
 
-export function creator() {
+export function creator(screensaverMode: boolean = false) {
   return function(game) {
     players = createPlayers()
 
@@ -68,10 +69,18 @@ export function creator() {
     game.scale.pageAlignHorizontally = true
 
     game.physics.startSystem(Phaser.Physics.ARCADE)
+    game.physics.arcade.checkCollision.left = screensaverMode;
+    game.physics.arcade.checkCollision.right = screensaverMode;
 
     ball = game.add.sprite(game.world.centerX, game.world.centerY, textureLib['ball'])
     applyPhysicsDefaults(ball)
     ball.body.bounce.set(1)
+    ball.events.onOutOfBounds.add(function() {
+      // OH NOES (do a thing)
+      players.each(player => player.score.text = 'winnarz')
+      ball.position.set(game.world.centerX, game.world.centerY)
+      ball.body.velocity.x = -ball.body.velocity.x
+    }, this)
 
     players.populate('paddle', data => new Paddle(game, data, textureLib['paddle'], textureLib['halo']))
     players.populate('keys', data => game.input.keyboard.addKeys(data.keys))
@@ -94,6 +103,18 @@ export function creator() {
     ballSurface = game.make.sprite(0, 0, textureLib['ball'])
     ballSurface.anchor.set(0.5, 0.5)
     ball.addChild(ballSurface)
+
+    players.left.score = game.add.text(players.left.data.xPos, 20, '0', {
+      font: '32px Arial',
+      fill: screensaverMode ? '#00000000' : '#ffffff'
+    })
+    players.right.score = game.add.text(players.left.data.xPos, 20, '0', {
+      font: '32px Arial',
+      fill: screensaverMode ? '#00000000' : '#ffffff',
+      boundsAlignH: 'right'
+    })
+    players.left.score.setTextBounds(0, 0, players.right.data.xPos - players.left.data.xPos, 0)
+    players.right.score.setTextBounds(0, 0, players.right.data.xPos - players.left.data.xPos, 0)
 
     /* Functions */
 
