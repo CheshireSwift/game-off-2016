@@ -1,25 +1,12 @@
 import * as _ from 'lodash'
-import { ScriptConfig } from './Script'
-import colourHash from './colourHash'
+import Paddle from './Paddle'
+import { PlayerData, PlayerKeyMap } from './PlayerData'
 
 interface Player {
   data: PlayerData;
   paddle?: Paddle;
   keys?: PlayerKeyMap<Phaser.Key>;
 }
-
-interface PlayerData {
-  xPos: number;
-  scriptConfig: ScriptConfig;
-  keys: PlayerKeyMap<number>;
-  tint: number;
-}
-
-interface Paddle extends Phaser.Sprite {
-  ballTint: number;
-}
-
-interface PlayerKeyMap<T> { up: T; down: T; }
 
 interface RenderLibrary   { [key: string]: (graphics: Phaser.Graphics) => void }
 interface TextureLibrary  { [key: string]: PIXI.Texture }
@@ -28,7 +15,7 @@ interface Players {
   left: Player;
   right: Player;
   each(f: (player: Player) => void);
-  populate(field: String, computation: (data: PlayerData) => any);
+  populate(field: String, computation: (data: PlayerData, paddle?: Paddle) => any);
   map<T>(f: string | ((player: Player) => T)): T[];
   both?: Player[];
 }
@@ -81,8 +68,22 @@ export function creator() {
     applyPhysicsDefaults(ball)
     ball.body.bounce.set(1)
 
-    players.populate('paddle', createPaddle)
+    players.populate('paddle', data => new Paddle(game, data, textureLib['paddle']))
     players.populate('keys', data => game.input.keyboard.addKeys(data.keys))
+    players.populate('paddle.haloEmitter', (data, paddle) => {
+      var emitter = game.add.emitter(0, 0, 10)
+      emitter.makeParticles(textureLib['paddle'])
+      var lifetime = 500
+      emitter.setAlpha(0.8, 0, lifetime)
+      emitter.gravity = 0
+      emitter.setAll('tint', paddle.ballTint)
+      emitter.start(false, lifetime, 750)
+      emitter.setRotation()
+      emitter.setXSpeed()
+      emitter.setYSpeed()
+      emitter.setScale(1, 2, 1, 1.2, lifetime)
+      paddle.addChild(emitter)
+    })
 
     game.physics.arcade.velocityFromAngle(30, 600, ball.body.velocity)
     ball.body.maxVelocity = 600
@@ -110,20 +111,6 @@ export function creator() {
       game.physics.enable(sprite, Phaser.Physics.ARCADE)
       sprite.checkWorldBounds = true
       sprite.body.collideWorldBounds = true
-    }
-
-    function createPaddle(data: PlayerData) {
-      var paddle: Paddle = _.assign<Phaser.Sprite, Paddle>(
-        game.add.sprite(data.xPos, game.world.centerY, textureLib['paddle']),
-        {
-            tint: data.tint,
-            ballTint: colourHash(data.scriptConfig)
-        }
-      )
-      applyPhysicsDefaults(paddle)
-      paddle.body.immovable = true
-
-      return paddle
     }
 
     function createPlayers() {
@@ -161,9 +148,9 @@ export function creator() {
         each: function(f) {
           _.forEach(this.both, f)
         },
-        populate: function(field, computation: (data: PlayerData) => any) {
+        populate: function(field, computation: (data: PlayerData, paddle?: Paddle) => any) {
           this.each(player => {
-            _.set(player, field, computation(player.data))
+            _.set(player, field, computation(player.data, player.paddle))
           })
         },
         map: function(f) { return _.map(this.both, f) }
