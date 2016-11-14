@@ -1,6 +1,6 @@
 import * as _ from 'lodash'
-import { ScriptConfig } from './Script'
-import colourHash from './colourHash'
+import Paddle from './Paddle'
+import { PlayerData, PlayerKeyMap } from './PlayerData'
 
 interface Player {
   data: PlayerData;
@@ -8,33 +8,22 @@ interface Player {
   keys?: PlayerKeyMap<Phaser.Key>;
 }
 
-interface PlayerData {
-  xPos: number;
-  scriptConfig: ScriptConfig;
-  keys: PlayerKeyMap<number>;
-  tint: number;
-}
-
-interface Paddle extends Phaser.Sprite {
-  ballTint: number;
-}
-
-interface PlayerKeyMap<T> { up: T; down: T; }
-
-interface RenderLibrary   { [key: string]: (graphics: Phaser.Graphics) => void }
+type RenderFunc = (graphics: Phaser.Graphics) => void
+interface RenderLibrary   { [key: string]: RenderFunc }
 interface TextureLibrary  { [key: string]: PIXI.Texture }
 
 interface Players {
   left: Player;
   right: Player;
   each(f: (player: Player) => void);
-  populate(field: String, computation: (data: PlayerData) => any);
+  populate(field: String, computation: (data: PlayerData, paddle?: Paddle) => any);
   map<T>(f: string | ((player: Player) => T)): T[];
   both?: Player[];
 }
 
 var textureLib: TextureLibrary
 var ball: Phaser.Sprite
+var ballSurface: Phaser.Sprite
 var trailEmitter: Phaser.Particles.Arcade.Emitter
 var haloEmitter: Phaser.Particles.Arcade.Emitter
 var players: Players
@@ -47,6 +36,9 @@ export function preloader() {
       },
       paddle: function(graphics) {
         graphics.drawRect(0, 0, 12, 72)
+      },
+      halo: function(graphics) {
+        graphics.drawRect(0, 0, 16, 76)
       },
       particle: function(graphics) {
         graphics.drawRect(0, 0, 12, 12)
@@ -81,7 +73,7 @@ export function creator() {
     applyPhysicsDefaults(ball)
     ball.body.bounce.set(1)
 
-    players.populate('paddle', createPaddle)
+    players.populate('paddle', data => new Paddle(game, data, textureLib['paddle'], textureLib['halo']))
     players.populate('keys', data => game.input.keyboard.addKeys(data.keys))
 
     game.physics.arcade.velocityFromAngle(30, 600, ball.body.velocity)
@@ -99,7 +91,7 @@ export function creator() {
     haloEmitter.gravity = 0
     haloEmitter.start(false, 400, 10)
     ball.addChild(haloEmitter)
-    var ballSurface = game.make.sprite(0, 0, textureLib['ball'])
+    ballSurface = game.make.sprite(0, 0, textureLib['ball'])
     ballSurface.anchor.set(0.5, 0.5)
     ball.addChild(ballSurface)
 
@@ -110,20 +102,6 @@ export function creator() {
       game.physics.enable(sprite, Phaser.Physics.ARCADE)
       sprite.checkWorldBounds = true
       sprite.body.collideWorldBounds = true
-    }
-
-    function createPaddle(data: PlayerData) {
-      var paddle: Paddle = _.assign<Phaser.Sprite, Paddle>(
-        game.add.sprite(data.xPos, game.world.centerY, textureLib['paddle']),
-        {
-            tint: data.tint,
-            ballTint: colourHash(data.scriptConfig)
-        }
-      )
-      applyPhysicsDefaults(paddle)
-      paddle.body.immovable = true
-
-      return paddle
     }
 
     function createPlayers() {
@@ -161,9 +139,9 @@ export function creator() {
         each: function(f) {
           _.forEach(this.both, f)
         },
-        populate: function(field, computation: (data: PlayerData) => any) {
+        populate: function(field, computation: (data: PlayerData, paddle?: Paddle) => any) {
           this.each(player => {
-            _.set(player, field, computation(player.data))
+            _.set(player, field, computation(player.data, player.paddle))
           })
         },
         map: function(f) { return _.map(this.both, f) }
@@ -194,10 +172,15 @@ export function updater(debugElem?: HTMLElement) {
     })
 
     game.physics.arcade.collide(ball, players.map('paddle'), function (ball: Phaser.Sprite, paddle: Paddle) {
-      ball.tint = paddle.ballTint
-      trailEmitter.setAll('tint', paddle.ballTint)
-      haloEmitter.setAll('tint', paddle.tint)
+      ballSurface.tint = paddle.modTint
+      trailEmitter.setAll('tint', paddle.tint)
+      haloEmitter.setAll('tint', paddle.modTint)
     })
+
+    game.time.advancedTiming = false
+    debugDisplay(game.time.fps)
+    game.time.slowMotion = game.input.keyboard.isDown(Phaser.KeyCode.SPACEBAR) ? 6.0 : 1.0
+    game.time.desiredFps = 60 * game.time.slowMotion
 
     debugDisplay(JSON.stringify(ball.position, null, 2))
 
