@@ -177,6 +177,11 @@ export function updater(debugElem?: HTMLElement) {
       haloEmitter.setAll('tint', paddle.modTint)
     })
 
+    game.time.advancedTiming = false
+    debugDisplay(game.time.fps)
+    game.time.slowMotion = game.input.keyboard.isDown(Phaser.KeyCode.SPACEBAR) ? 6.0 : 1.0
+    game.time.desiredFps = 60 * game.time.slowMotion
+
     debugDisplay(JSON.stringify(ball.position, null, 2))
 
     if (debugElem) {
