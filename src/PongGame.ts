@@ -8,7 +8,8 @@ interface Player {
   keys?: PlayerKeyMap<Phaser.Key>;
 }
 
-interface RenderLibrary   { [key: string]: (graphics: Phaser.Graphics) => void }
+type RenderFunc = (graphics: Phaser.Graphics) => void
+interface RenderLibrary   { [key: string]: RenderFunc }
 interface TextureLibrary  { [key: string]: PIXI.Texture }
 
 interface Players {
@@ -22,6 +23,7 @@ interface Players {
 
 var textureLib: TextureLibrary
 var ball: Phaser.Sprite
+var ballSurface: Phaser.Sprite
 var trailEmitter: Phaser.Particles.Arcade.Emitter
 var haloEmitter: Phaser.Particles.Arcade.Emitter
 var players: Players
@@ -34,6 +36,9 @@ export function preloader() {
       },
       paddle: function(graphics) {
         graphics.drawRect(0, 0, 12, 72)
+      },
+      halo: function(graphics) {
+        graphics.drawRect(0, 0, 16, 76)
       },
       particle: function(graphics) {
         graphics.drawRect(0, 0, 12, 12)
@@ -68,22 +73,8 @@ export function creator() {
     applyPhysicsDefaults(ball)
     ball.body.bounce.set(1)
 
-    players.populate('paddle', data => new Paddle(game, data, textureLib['paddle']))
+    players.populate('paddle', data => new Paddle(game, data, textureLib['paddle'], textureLib['halo']))
     players.populate('keys', data => game.input.keyboard.addKeys(data.keys))
-    players.populate('paddle.haloEmitter', (data, paddle) => {
-      var emitter = game.add.emitter(0, 0, 10)
-      emitter.makeParticles(textureLib['paddle'])
-      var lifetime = 500
-      emitter.setAlpha(0.8, 0, lifetime)
-      emitter.gravity = 0
-      emitter.setAll('tint', paddle.ballTint)
-      emitter.start(false, lifetime, 750)
-      emitter.setRotation()
-      emitter.setXSpeed()
-      emitter.setYSpeed()
-      emitter.setScale(1, 2, 1, 1.2, lifetime)
-      paddle.addChild(emitter)
-    })
 
     game.physics.arcade.velocityFromAngle(30, 600, ball.body.velocity)
     ball.body.maxVelocity = 600
@@ -100,7 +91,7 @@ export function creator() {
     haloEmitter.gravity = 0
     haloEmitter.start(false, 400, 10)
     ball.addChild(haloEmitter)
-    var ballSurface = game.make.sprite(0, 0, textureLib['ball'])
+    ballSurface = game.make.sprite(0, 0, textureLib['ball'])
     ballSurface.anchor.set(0.5, 0.5)
     ball.addChild(ballSurface)
 
@@ -181,9 +172,9 @@ export function updater(debugElem?: HTMLElement) {
     })
 
     game.physics.arcade.collide(ball, players.map('paddle'), function (ball: Phaser.Sprite, paddle: Paddle) {
-      ball.tint = paddle.ballTint
-      trailEmitter.setAll('tint', paddle.ballTint)
-      haloEmitter.setAll('tint', paddle.tint)
+      ballSurface.tint = paddle.modTint
+      trailEmitter.setAll('tint', paddle.tint)
+      haloEmitter.setAll('tint', paddle.modTint)
     })
 
     debugDisplay(JSON.stringify(ball.position, null, 2))
