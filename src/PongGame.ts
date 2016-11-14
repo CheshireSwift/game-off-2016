@@ -131,12 +131,12 @@ export function creator(screensaverMode: boolean = false) {
           data: {
             xPos: 25,
             scriptConfig: {
-              property1: Math.random() * 256,
-              property2: Math.random() * 256,
-              property3: Math.random() * 256,
-              property4: Math.random() * 256,
-              property5: Math.random() * 256,
-              property6: Math.random() * 256
+              property1: 1,
+              property2: 2,
+              property3: 4,
+              property4: 8,
+              property5: 16,
+              property6: 32
             },
             keys: { up: Phaser.KeyCode.W, down: Phaser.KeyCode.S },
             tint: 0xff1111
@@ -146,12 +146,12 @@ export function creator(screensaverMode: boolean = false) {
           data: {
             xPos: game.world.width - 25,
             scriptConfig: {
-              property1: Math.random() * 256,
-              property2: Math.random() * 256,
-              property3: Math.random() * 256,
-              property4: Math.random() * 256,
-              property5: Math.random() * 256,
-              property6: Math.random() * 256
+              property1: 1,
+              property2: 23,
+              property3: 456,
+              property4: 7890,
+              property5: 13.37,
+              property6: 123456
             },
             keys: { up: Phaser.KeyCode.UP, down: Phaser.KeyCode.DOWN },
             tint: 0x11ffff

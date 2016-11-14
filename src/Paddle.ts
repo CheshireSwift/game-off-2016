@@ -2,7 +2,7 @@ import colourHash from './colourHash'
 import { PlayerData } from './PlayerData'
 
 export default class Paddle extends Phaser.Sprite {
-  private modTint: number;
+  private _modTint: number;
   private halo: Phaser.Sprite
   private surface: Phaser.Sprite
   private haloEmitter: Phaser.Particles.Arcade.Emitter
@@ -28,6 +28,22 @@ export default class Paddle extends Phaser.Sprite {
     this.haloEmitter = this.createHaloEmitter(haloTexture)
     this.halo = this.addChildSprite(haloTexture, this.modTint)
     this.surface = this.addChildSprite(texture, this.tint)
+  }
+
+  set modTint(newTint: number) {
+    this._modTint = newTint
+  }
+
+  get modTint(): number {
+    return this._modTint
+  }
+
+  set spriteTint(newTint: number) {
+    this.tint = newTint
+  }
+
+  get spriteTint(): number {
+    return this.tint
   }
 
   private createHaloEmitter(texture: PIXI.Texture): Phaser.Particles.Arcade.Emitter {
