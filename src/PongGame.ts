@@ -1,26 +1,7 @@
-import * as _ from 'lodash'
 import Paddle from './Paddle'
+import { Player, Players } from './Player'
 import { PlayerData, PlayerKeyMap } from './PlayerData'
-
-interface Player {
-  data: PlayerData;
-  paddle?: Paddle;
-  keys?: PlayerKeyMap<Phaser.Key>;
-  score?: Phaser.Text
-}
-
-type RenderFunc = (graphics: Phaser.Graphics) => void
-interface RenderLibrary   { [key: string]: RenderFunc }
-interface TextureLibrary  { [key: string]: PIXI.Texture }
-
-interface Players {
-  left: Player;
-  right: Player;
-  each(f: (player: Player) => void);
-  populate(field: String, computation: (data: PlayerData, paddle?: Paddle) => any);
-  map<T>(f: string | ((player: Player) => T)): T[];
-  both?: Player[];
-}
+import TextureLibrary from './TextureLibrary'
 
 var textureLib: TextureLibrary
 var ball: Phaser.Sprite
@@ -31,7 +12,7 @@ var players: Players
 
 export function preloader() {
   return function(game) {
-    var renderLib: RenderLibrary = {
+    textureLib = new TextureLibrary(game, {
       ball: function(graphics) {
         graphics.drawRect(0, 0, 12, 12)
       },
@@ -44,25 +25,13 @@ export function preloader() {
       particle: function(graphics) {
         graphics.drawRect(0, 0, 12, 12)
       }
-    }
-
-    textureLib = _.mapValues(renderLib, renderTexture)
-
-    /* Functions */
-
-    function renderTexture(graphicsCommands: (graphics: Phaser.Graphics) => void): PIXI.Texture {
-      var graphics = new Phaser.Graphics(game)
-      graphics.beginFill(0xffffff)
-      graphicsCommands(graphics)
-      graphics.endFill()
-      return graphics.generateTexture()
-    }
+    })
   }
 }
 
 export function creator(screensaverMode: boolean = false) {
   return function(game) {
-    players = createPlayers()
+    players = Player.createPlayers(game, textureLib)
 
     game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL
     game.scale.pageAlignVertically = true
@@ -81,9 +50,6 @@ export function creator(screensaverMode: boolean = false) {
       ball.position.set(game.world.centerX, game.world.centerY)
       ball.body.velocity.x = -ball.body.velocity.x
     }, this)
-
-    players.populate('paddle', data => new Paddle(game, data, textureLib['paddle'], textureLib['halo']))
-    players.populate('keys', data => game.input.keyboard.addKeys(data.keys))
 
     game.physics.arcade.velocityFromAngle(30, 600, ball.body.velocity)
     ball.body.maxVelocity = 600
@@ -104,17 +70,9 @@ export function creator(screensaverMode: boolean = false) {
     ballSurface.anchor.set(0.5, 0.5)
     ball.addChild(ballSurface)
 
-    players.left.score = game.add.text(players.left.data.xPos, 20, '0', {
-      font: '32px Arial',
-      fill: screensaverMode ? '#00000000' : '#ffffff'
-    })
-    players.right.score = game.add.text(players.left.data.xPos, 20, '0', {
-      font: '32px Arial',
-      fill: screensaverMode ? '#00000000' : '#ffffff',
-      boundsAlignH: 'right'
-    })
-    players.left.score.setTextBounds(0, 0, players.right.data.xPos - players.left.data.xPos, 0)
-    players.right.score.setTextBounds(0, 0, players.right.data.xPos - players.left.data.xPos, 0)
+    if (screensaverMode) {
+      players.each(player => player.scoreBanner.visible = false)
+    }
 
     /* Functions */
 
@@ -123,52 +81,6 @@ export function creator(screensaverMode: boolean = false) {
       game.physics.enable(sprite, Phaser.Physics.ARCADE)
       sprite.checkWorldBounds = true
       sprite.body.collideWorldBounds = true
-    }
-
-    function createPlayers() {
-      var retval: Players = {
-        left: {
-          data: {
-            xPos: 25,
-            scriptConfig: {
-              property1: 1,
-              property2: 2,
-              property3: 4,
-              property4: 8,
-              property5: 16,
-              property6: 32
-            },
-            keys: { up: Phaser.KeyCode.W, down: Phaser.KeyCode.S },
-            tint: 0xff1111
-          }
-        },
-        right: {
-          data: {
-            xPos: game.world.width - 25,
-            scriptConfig: {
-              property1: 1,
-              property2: 23,
-              property3: 456,
-              property4: 7890,
-              property5: 13.37,
-              property6: 123456
-            },
-            keys: { up: Phaser.KeyCode.UP, down: Phaser.KeyCode.DOWN },
-            tint: 0x11ffff
-          }
-        },
-        each: function(f) {
-          _.forEach(this.both, f)
-        },
-        populate: function(field, computation: (data: PlayerData, paddle?: Paddle) => any) {
-          this.each(player => {
-            _.set(player, field, computation(player.data, player.paddle))
-          })
-        },
-        map: function(f) { return _.map(this.both, f) }
-      }
-      retval.both = [retval.left, retval.right]
-      return retval
     }
   }
 }
