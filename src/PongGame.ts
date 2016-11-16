@@ -1,25 +1,7 @@
-import * as _ from 'lodash'
 import Paddle from './Paddle'
+import { Player, Players } from './Player'
 import { PlayerData, PlayerKeyMap } from './PlayerData'
-
-interface Player {
-  data: PlayerData;
-  paddle?: Paddle;
-  keys?: PlayerKeyMap<Phaser.Key>;
-}
-
-type RenderFunc = (graphics: Phaser.Graphics) => void
-interface RenderLibrary   { [key: string]: RenderFunc }
-interface TextureLibrary  { [key: string]: PIXI.Texture }
-
-interface Players {
-  left: Player;
-  right: Player;
-  each(f: (player: Player) => void);
-  populate(field: String, computation: (data: PlayerData, paddle?: Paddle) => any);
-  map<T>(f: string | ((player: Player) => T)): T[];
-  both?: Player[];
-}
+import TextureLibrary from './TextureLibrary'
 
 var textureLib: TextureLibrary
 var ball: Phaser.Sprite
@@ -30,7 +12,7 @@ var players: Players
 
 export function preloader() {
   return function(game) {
-    var renderLib: RenderLibrary = {
+    textureLib = new TextureLibrary(game, {
       ball: function(graphics) {
         graphics.drawRect(0, 0, 12, 12)
       },
@@ -43,38 +25,36 @@ export function preloader() {
       particle: function(graphics) {
         graphics.drawRect(0, 0, 12, 12)
       }
-    }
-
-    textureLib = _.mapValues(renderLib, renderTexture)
-
-    /* Functions */
-
-    function renderTexture(graphicsCommands: (graphics: Phaser.Graphics) => void): PIXI.Texture {
-      var graphics = new Phaser.Graphics(game)
-      graphics.beginFill(0xffffff)
-      graphicsCommands(graphics)
-      graphics.endFill()
-      return graphics.generateTexture()
-    }
+    })
   }
 }
 
-export function creator() {
+export function creator(screensaverMode: boolean = false) {
   return function(game) {
-    players = createPlayers()
+    players = Player.createPlayers(game, textureLib)
 
     game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL
     game.scale.pageAlignVertically = true
     game.scale.pageAlignHorizontally = true
 
     game.physics.startSystem(Phaser.Physics.ARCADE)
+    game.physics.arcade.checkCollision.left = screensaverMode;
+    game.physics.arcade.checkCollision.right = screensaverMode;
 
     ball = game.add.sprite(game.world.centerX, game.world.centerY, textureLib['ball'])
     applyPhysicsDefaults(ball)
     ball.body.bounce.set(1)
-
-    players.populate('paddle', data => new Paddle(game, data, textureLib['paddle'], textureLib['halo']))
-    players.populate('keys', data => game.input.keyboard.addKeys(data.keys))
+    ball.events.onOutOfBounds.add(function() {
+      // OH NOES (do a thing)
+      if (ball.position.x < players.left.data.xPos) {
+        players.right.incrementScore()
+      }
+      if (ball.position.x > players.right.data.xPos) {
+        players.left.incrementScore()
+      }
+      ball.position.set(game.world.centerX, game.world.centerY)
+      ball.body.velocity.x = -ball.body.velocity.x
+    }, this)
 
     game.physics.arcade.velocityFromAngle(30, 600, ball.body.velocity)
     ball.body.maxVelocity = 600
@@ -95,6 +75,10 @@ export function creator() {
     ballSurface.anchor.set(0.5, 0.5)
     ball.addChild(ballSurface)
 
+    if (screensaverMode) {
+      players.each(player => player.scoreBanner.visible = false)
+    }
+
     /* Functions */
 
     function applyPhysicsDefaults(sprite: Phaser.Sprite) {
@@ -102,52 +86,6 @@ export function creator() {
       game.physics.enable(sprite, Phaser.Physics.ARCADE)
       sprite.checkWorldBounds = true
       sprite.body.collideWorldBounds = true
-    }
-
-    function createPlayers() {
-      var retval: Players = {
-        left: {
-          data: {
-            xPos: 25,
-            scriptConfig: {
-              property1: Math.random() * 256,
-              property2: Math.random() * 256,
-              property3: Math.random() * 256,
-              property4: Math.random() * 256,
-              property5: Math.random() * 256,
-              property6: Math.random() * 256
-            },
-            keys: { up: Phaser.KeyCode.W, down: Phaser.KeyCode.S },
-            tint: 0xff1111
-          }
-        },
-        right: {
-          data: {
-            xPos: game.world.width - 25,
-            scriptConfig: {
-              property1: Math.random() * 256,
-              property2: Math.random() * 256,
-              property3: Math.random() * 256,
-              property4: Math.random() * 256,
-              property5: Math.random() * 256,
-              property6: Math.random() * 256
-            },
-            keys: { up: Phaser.KeyCode.UP, down: Phaser.KeyCode.DOWN },
-            tint: 0x11ffff
-          }
-        },
-        each: function(f) {
-          _.forEach(this.both, f)
-        },
-        populate: function(field, computation: (data: PlayerData, paddle?: Paddle) => any) {
-          this.each(player => {
-            _.set(player, field, computation(player.data, player.paddle))
-          })
-        },
-        map: function(f) { return _.map(this.both, f) }
-      }
-      retval.both = [retval.left, retval.right]
-      return retval
     }
   }
 }

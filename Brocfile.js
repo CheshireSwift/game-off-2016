@@ -13,7 +13,8 @@ var ts = typescript(mergeTrees([sourceDir, 'typings']), {
     tsconfig: {
         compilerOptions: {
             module: "commonjs",
-            sourceMap: true
+            sourceMap: true,
+            target: 'ES5'
         }
     }
 })
