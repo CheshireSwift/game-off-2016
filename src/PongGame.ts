@@ -46,7 +46,12 @@ export function creator(screensaverMode: boolean = false) {
     ball.body.bounce.set(1)
     ball.events.onOutOfBounds.add(function() {
       // OH NOES (do a thing)
-      players.each(player => player.score.text = 'winnarz')
+      if (ball.position.x < players.left.data.xPos) {
+        players.right.incrementScore()
+      }
+      if (ball.position.x > players.right.data.xPos) {
+        players.left.incrementScore()
+      }
       ball.position.set(game.world.centerX, game.world.centerY)
       ball.body.velocity.x = -ball.body.velocity.x
     }, this)
