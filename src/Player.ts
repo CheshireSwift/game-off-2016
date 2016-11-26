@@ -66,12 +66,8 @@ function buildLeftData(game: Phaser.Game): PlayerData {
   return {
     xPos: game.world.left + 25,
     scriptConfig: {
-      property1: 1,
-      property2: 2,
-      property3: 4,
-      property4: 8,
-      property5: 16,
-      property6: 32
+      curve: 5,
+      nudge: { x: 1000, y: 0 }
     },
     keys: { up: Phaser.KeyCode.W, down: Phaser.KeyCode.S },
     tint: 0xff1111
@@ -82,12 +78,8 @@ function buildRightData(game: Phaser.Game): PlayerData {
   return {
     xPos: game.world.width - 25,
     scriptConfig: {
-      property1: 1,
-      property2: 23,
-      property3: 456,
-      property4: 7890,
-      property5: 13.37,
-      property6: 123456
+      curve: 30,
+      nudge: { x: 5, y: 0 }
     },
     keys: { up: Phaser.KeyCode.UP, down: Phaser.KeyCode.DOWN },
     tint: 0x11ffff

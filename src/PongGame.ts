@@ -1,11 +1,13 @@
 import Paddle from './Paddle'
 import { Player, Players } from './Player'
 import { PlayerData, PlayerKeyMap } from './PlayerData'
+import { ScriptConfig } from './Script'
 import TextureLibrary from './TextureLibrary'
 
 var textureLib: TextureLibrary
 var ball: Phaser.Sprite
 var ballSurface: Phaser.Sprite
+var currentScript: ScriptConfig
 var trailEmitter: Phaser.Particles.Arcade.Emitter
 var haloEmitter: Phaser.Particles.Arcade.Emitter
 var players: Players
@@ -45,7 +47,6 @@ export function creator(screensaverMode: boolean = false) {
     applyPhysicsDefaults(ball)
     ball.body.bounce.set(1)
     ball.events.onOutOfBounds.add(function() {
-      // OH NOES (do a thing)
       if (ball.position.x < players.left.data.xPos) {
         players.right.incrementScore()
       }
@@ -113,7 +114,19 @@ export function updater(debugElem?: HTMLElement) {
       ballSurface.tint = paddle.modTint
       trailEmitter.setAll('tint', paddle.tint)
       haloEmitter.setAll('tint', paddle.modTint)
+      currentScript = paddle.script
     })
+
+    if (currentScript) {
+      var { nudge, curve } = currentScript
+      ball.body.velocity
+        .add(nudge.x, nudge.y)
+        .rotate(0, 0, curve/60, true)
+
+      ball.body.velocity
+        .clampX(-600, 600)
+        .clampY(-500, 500)
+    }
 
     game.time.advancedTiming = false
     debugDisplay(game.time.fps)
@@ -121,6 +134,7 @@ export function updater(debugElem?: HTMLElement) {
     game.time.desiredFps = 60 * game.time.slowMotion
 
     debugDisplay(JSON.stringify(ball.position, null, 2))
+    debugDisplay(JSON.stringify(ball.body.velocity, null, 2))
 
     if (debugElem) {
       debugElem.innerText = debugText

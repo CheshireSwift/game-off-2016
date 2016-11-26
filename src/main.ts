@@ -5,7 +5,7 @@ window['main'] = function() {
   var theGame = new Phaser.Game(800, 600, Phaser.CANVAS, '', {
     preload: PongGame.preloader(),
     create: PongGame.creator(false),
-    update: PongGame.updater(false && debugElem)
+    update: PongGame.updater(debugElem)
   })
 }
 

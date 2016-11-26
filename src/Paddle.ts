@@ -1,11 +1,14 @@
 import colourHash from './colourHash'
 import { PlayerData } from './PlayerData'
+import { ScriptConfig } from './Script'
 
 export default class Paddle extends Phaser.Sprite {
   private _modTint: number;
   private halo: Phaser.Sprite
   private surface: Phaser.Sprite
   private haloEmitter: Phaser.Particles.Arcade.Emitter
+
+  public script: ScriptConfig
 
   constructor(
       game: Phaser.Game,
@@ -18,6 +21,7 @@ export default class Paddle extends Phaser.Sprite {
 
     this.tint = data.tint
     this.modTint = colourHash(data.scriptConfig)
+    this.script = data.scriptConfig
 
     this.anchor.set(0.5, 0.5)
     game.physics.enable(this, Phaser.Physics.ARCADE)
