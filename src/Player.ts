@@ -1,6 +1,6 @@
 import * as _ from 'lodash'
 import Paddle from './Paddle'
-import { PlayerData, PlayerKeyMap } from './PlayerData'
+import { PlayerData, PlayerKeyMap, buildLeftData, buildRightData } from './PlayerData'
 import TextureLibrary from './TextureLibrary'
 
 export class Player {
@@ -60,29 +60,5 @@ export interface Players {
   each(f: (player: Player) => void);
   map<T>(f: string | ((player: Player) => T)): T[];
   both?: Player[];
-}
-
-function buildLeftData(game: Phaser.Game): PlayerData {
-  return {
-    xPos: game.world.left + 25,
-    scriptConfig: {
-      curve: 5,
-      nudge: { x: 1000, y: 0 }
-    },
-    keys: { up: Phaser.KeyCode.W, down: Phaser.KeyCode.S },
-    tint: 0xff1111
-  }
-}
-
-function buildRightData(game: Phaser.Game): PlayerData {
-  return {
-    xPos: game.world.width - 25,
-    scriptConfig: {
-      curve: 30,
-      nudge: { x: 5, y: 0 }
-    },
-    keys: { up: Phaser.KeyCode.UP, down: Phaser.KeyCode.DOWN },
-    tint: 0x11ffff
-  }
 }
 

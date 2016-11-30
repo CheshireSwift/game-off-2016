@@ -31,17 +31,9 @@ export function preloader() {
   }
 }
 
-export function creator(screensaverMode: boolean = false) {
+export function creator(screensaverMode) {
   return function(game) {
     players = Player.createPlayers(game, textureLib)
-
-    game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL
-    game.scale.pageAlignVertically = true
-    game.scale.pageAlignHorizontally = true
-
-    game.physics.startSystem(Phaser.Physics.ARCADE)
-    game.physics.arcade.checkCollision.left = screensaverMode;
-    game.physics.arcade.checkCollision.right = screensaverMode;
 
     ball = game.add.sprite(game.world.centerX, game.world.centerY, textureLib['ball'])
     applyPhysicsDefaults(ball)
