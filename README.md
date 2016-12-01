@@ -13,3 +13,7 @@ ModPong is the retro favourite, now with added shenanigans.
 ## Live Demo
 
 http://swift.swifteagle.co.uk/game-off-2016/
+
+## Script Format
+
+Scripts are just JSON text files. See [Script.ts](src/Script.ts) for the definition.
