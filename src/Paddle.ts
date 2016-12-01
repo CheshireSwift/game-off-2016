@@ -8,7 +8,7 @@ export default class Paddle extends Phaser.Sprite {
   private surface: Phaser.Sprite
   private haloEmitter: Phaser.Particles.Arcade.Emitter
 
-  public script: ScriptConfig
+  private _script: ScriptConfig
 
   constructor(
       game: Phaser.Game,
@@ -20,8 +20,8 @@ export default class Paddle extends Phaser.Sprite {
     game.add.existing(this)
 
     this.tint = data.tint
-    this.modTint = colourHash(data.scriptConfig)
-    this.script = data.scriptConfig
+    this._script = data.scriptConfig
+    this._modTint = colourHash(data.scriptConfig)
 
     this.anchor.set(0.5, 0.5)
     game.physics.enable(this, Phaser.Physics.ARCADE)
@@ -36,6 +36,8 @@ export default class Paddle extends Phaser.Sprite {
 
   set modTint(newTint: number) {
     this._modTint = newTint
+    this.halo.tint = newTint
+    this.haloEmitter.setAll('tint', newTint)
   }
 
   get modTint(): number {
@@ -48,6 +50,15 @@ export default class Paddle extends Phaser.Sprite {
 
   get spriteTint(): number {
     return this.tint
+  }
+
+  set script(newScript: ScriptConfig) {
+    this._script = newScript
+    this.modTint = colourHash(newScript)
+  }
+
+  get script(): ScriptConfig {
+    return this._script
   }
 
   private createHaloEmitter(texture: PIXI.Texture): Phaser.Particles.Arcade.Emitter {

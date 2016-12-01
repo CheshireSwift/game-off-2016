@@ -1,4 +1,4 @@
-export interface ScriptConfig {
+export class ScriptConfig {
   curve: number
   nudge: ScriptVector
 }
